@@ -33,7 +33,10 @@ class Pendulum:
             for _ in range(steps):
                 self.angle1, self.angularSpeed1 = rk4_simple_pendulum(f_simple_pendulum, (self.angle1, self.angularSpeed1), h, self.g, self.l1)
         elif self.pendulum_type == 'Double':
+            if self.model == 'Classic':
                 self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2 = rk4_double_pendulum(f_double_pendulum, (self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2), h, self.g, self.l1, self.l2, self.m1, self.m2)
+            elif self.model == 'Physic':
+                self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2 = rk4_double_physic_pendulum(f_double_physic_pendulum, (self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2), h, self.g, self.l1, self.l2, self.d1, self.d2, self.m1, self.m2, self.i1, self.i2)
 
     def draw(self, screen):
         scale = self.pixel_per_m
