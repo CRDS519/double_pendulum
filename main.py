@@ -5,7 +5,7 @@ from pendulum import Pendulum
 pygame.init()
 width = 1600
 height = 1200
-screen = pygame.display.set_mode((1600, 1200))
+screen = pygame.display.set_mode((width, height))
 scale = min(width, height) * 0.4
 pygame.display.set_caption('Pendulum')
 clock = pygame.time.Clock()
