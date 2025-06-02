@@ -12,7 +12,14 @@ clock = pygame.time.Clock()
 running = True
 fps = 60
 dt = 1/fps
-pendulum = Pendulum(0.5, 0.5, 0.25, 0.25, 10, 10, 0, 0, 9.81,'Double','Classic', scale)
+pendulum = Pendulum(
+    math.pi - 0.01, math.pi - 0.01, # debut angles
+    0.52, 0.51, # lengths of the rods
+    0.275, 0.202, # distance from the joint to the center of mass
+    0.337, 0.269, # masses of the rods
+    0.03, 0.023, # moment of inertia of the rods around the joint
+    9.81,'Double','Physic', scale
+)
 
 while running:
     for event in pygame.event.get():

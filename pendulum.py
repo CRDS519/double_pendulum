@@ -5,7 +5,16 @@ from physics.rungekutta import *
 from physics.pendulum_fct import *
 
 class Pendulum:
-    def __init__(self, l1, l2, d1, d2, m1, m2, i1, i2, g, pendulum_type, model, scale):
+    def __init__(self, angle1, angle2, l1, l2, d1, d2, m1, m2, i1, i2, g, pendulum_type, model, scale):
+        valid_types = {'Simple', 'Double'}
+        valid_models = {'Classic', 'Physic'}
+        if pendulum_type not in valid_types:
+            raise ValueError(f"pendulum_type doit être dans {valid_types}, pas '{pendulum_type}'")
+        if model not in valid_models:
+            raise ValueError(f"Pour un pendule double, model doit être dans {valid_models}, pas '{model}'")
+
+        self.angle1 = angle1
+        self.angle2 = angle2 #if double pendulum
         self.l1 = l1 #in m
         self.l2 = l2 #if double pendulum
         self.pixel_per_m  = scale
@@ -18,43 +27,61 @@ class Pendulum:
         self.g = g
         self.pendulum_type = pendulum_type # Simple/Double
         self.model = model # Classic/Physic
-        self.angle1 = math.pi
-        self.angle2 = math.pi - 0.01 #if double pendulum
         self.angularSpeed1 = 0
         self.angularSpeed2 = 0 #if double pendulum
+
+        self.origin_x = 800
+        self.origin_y = 600
     
     def update(self, dt):
         self.move_pendulum(dt)
     
     def move_pendulum(self, dt):
-        steps = 1
+        steps = 2
         h = dt / steps
+
         if self.pendulum_type == 'Simple':
-            for _ in range(steps):
-                self.angle1, self.angularSpeed1 = rk4_simple_pendulum(f_simple_pendulum, (self.angle1, self.angularSpeed1), h, self.g, self.l1)
+            if self.model == 'Classic':
+                f = f_simple_pendulum
+                rk4 = rk4_simple_pendulum
+                args = (self.g, self.l1)
+            else:
+                f = f_simple_physic_pendulum
+                rk4 = rk4_simple_physic_pendulum
+                args = (self.g, self.l1, self.d1, self.m1, self.i1)
+                
+            state = (self.angle1, self.angularSpeed1)
+            new_state = rk4(f, state, h, *args)
+            self.angle1, self.angularSpeed1 = new_state
         elif self.pendulum_type == 'Double':
             if self.model == 'Classic':
-                self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2 = rk4_double_pendulum(f_double_pendulum, (self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2), h, self.g, self.l1, self.l2, self.m1, self.m2)
-            elif self.model == 'Physic':
-                self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2 = rk4_double_physic_pendulum(f_double_physic_pendulum, (self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2), h, self.g, self.l1, self.l2, self.d1, self.d2, self.m1, self.m2, self.i1, self.i2)
+                f = f_double_pendulum
+                rk4 = rk4_double_pendulum
+                args = (self.g, self.l1, self.l2, self.m1, self.m2)
+            else:  # self.model == 'Physic'
+                f = f_double_physic_pendulum
+                rk4 = rk4_double_physic_pendulum
+                args = (self.g, self.l1, self.l2, self.d1, self.d2, self.m1, self.m2, self.i1, self.i2)
+
+            state = (self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2)
+            new_state = rk4(f, state, h, *args)
+            self.angle1, self.angularSpeed1, self.angle2, self.angularSpeed2 = new_state
+
+    def to_screen(self, x_m, y_m):
+        scale = self.pixel_per_m
+        return int(self.origin_x + scale*x_m), int(self.origin_y + scale*y_m)
 
     def draw(self, screen):
-        scale = self.pixel_per_m
-        origin_x, origin_y = 800, 600
-
         if self.pendulum_type == 'Simple':
-            x1 = origin_x + scale * self.l1 * math.sin(self.angle1)
-            y1 = origin_y + scale * self.l1 * math.cos(self.angle1)
+            x1, y1 = self.to_screen(self.l1*math.sin(self.angle1), self.l1*math.cos(self.angle1))
 
-            pygame.draw.line(screen, "white", (origin_x, origin_y), (int(x1), int(y1)), 2)
+            pygame.draw.line(screen, "white", (self.origin_x, self.origin_y), (int(x1), int(y1)), 2)
             pygame.draw.circle(screen, "red", (int(x1), int(y1)), 10)
         elif self.pendulum_type == 'Double':
-            x1 = origin_x + scale * self.l1 * math.sin(self.angle1)
-            y1 = origin_y + scale * self.l1 * math.cos(self.angle1)
-            x2 = origin_x + scale * (self.l1 * math.sin(self.angle1) + self.l2 * math.sin(self.angle2))
-            y2 = origin_y + scale * (self.l1 * math.cos(self.angle1) + self.l2 * math.cos(self.angle2))
+            x1, y1 = self.to_screen(self.l1*math.sin(self.angle1), self.l1*math.cos(self.angle1))
+            x2, y2 = self.to_screen((self.l1 * math.sin(self.angle1) + self.l2 * math.sin(self.angle2)), (self.l1 * math.cos(self.angle1) + self.l2 * math.cos(self.angle2)))
 
-            pygame.draw.line(screen, "white", (origin_x, origin_y), (int(x1), int(y1)), 2)
+            pygame.draw.line(screen, "white", (self.origin_x, self.origin_y), (int(x1), int(y1)), 2)
             pygame.draw.line(screen, "white", (int(x1), int(y1)), (int(x2), int(y2)), 2)
             pygame.draw.circle(screen, "red", (int(x1), int(y1)), 10)
             pygame.draw.circle(screen, "red", (int(x2), int(y2)), 10)
