@@ -1,58 +1,62 @@
 import math
 import numpy as np
 
-def f_simple_pendulum(t, angle, g, l, friction_factor):
-        theta1, theta2 = angle
-
-        friction = friction_factor*theta2
-
-        dtheta1dt = theta2
-        dtheta2dt = -(g/l)*math.sin(theta1) - friction
-
-        return np.array([dtheta1dt,dtheta2dt])
-
-def f_simple_physic_pendulum(t, angle, g, l, d, m, i, friction_factor):
+def f_simple_pendulum(t, angle, g, l, m, friction):
         theta1, theta2 = angle
 
         dtheta1dt = theta2
-        dtheta2dt = (-m*g*d*math.sin(theta1))/(i + m*(d**2))
+        dtheta2dt = -(g/l)*math.sin(theta1) - (friction/(m*(l**2)))*theta2
 
         return np.array([dtheta1dt,dtheta2dt])
 
-def f_double_pendulum(t, angle, g, l1, l2, m1, m2, friction_factor):
+def f_simple_physic_pendulum(t, angle, g, l, d, m, i, friction):
+        theta1, theta2 = angle
+
+        dtheta1dt = theta2
+        dtheta2dt = (-m*g*d*math.sin(theta1) - friction*theta2)/(i + m*(d**2))
+
+        return np.array([dtheta1dt,dtheta2dt])
+
+def f_double_pendulum(t, angle, g, l1, l2, m1, m2, f1, f2):
         theta1a, theta1b, theta2a, theta2b = angle
 
-        num1 = -g*(2*m1 + m2)*math.sin(theta1a) - m2*g*math.sin(theta1a - 2*theta2a) - 2*math.sin(theta1a - theta2a)*m2*((theta2b**2)*l2 + (theta1b**2)*l1*math.cos(theta1a - theta2a))
-        num2 = 2*math.sin(theta1a - theta2a)*((theta1b**2)*l1*(m1 + m2) + g*(m1 + m2)*math.cos(theta1a) + (theta2b**2)*l2*m2*math.cos(theta1a - theta2a))
-        den1 = l1*(2*m1 + m2 - m2*math.cos(2*theta1a - 2*theta2a))
-        den2 = l2*(2*m1 + m2 - m2*math.cos(2*theta1a - 2*theta2a))
-
-        friction1 = friction_factor*theta1b
-        friction2 = friction_factor*theta2b
+        num1 = -m2*(theta1b**2)*math.sin(2*(theta1a - theta2a))
+        num2 = m2*g*math.cos(theta1a - theta2a)*math.sin(theta2a)
+        num3 = f2*math.cos(theta1a - theta2a)*theta2b
+        num4 = -m2*l2*(theta2b**2)*math.sin(theta1a - theta2a)
+        num5 = -(m1 + m2)*g*math.sin(theta1a)
+        num6 = -f1*theta1b
+        den = m1 + m2 - m2*(math.cos(theta1a - theta2a)**2)
 
         dtheta1adt = theta1b
-        dtheta1bdt = num1/den1 - friction1
+        dtheta1bdt = num1/(2*den) + num2/(l1*den) + num3/(l1*l2*den) + num4/(l1*den) + num5/(l1*den) + num6/((l1**2)*den)
         dtheta2adt = theta2b
-        dtheta2bdt = num2/den2 - friction2
+        dtheta2bdt = -(l1/l2)*math.cos(theta1a - theta2a)*dtheta1bdt + (l1/l2)*(theta1b**2)*math.sin(theta1a - theta2a) - (g/l2)*math.sin(theta2a) - (f2/(m2*(l2**2)))*theta2b
 
         return np.array([dtheta1adt,dtheta1bdt,dtheta2adt,dtheta2bdt])
 
-def f_double_physic_pendulum(t, angle, g, l1, l2, d1, d2, m1, m2, i1, i2, friction_factor):
+def f_double_physic_pendulum(t, angle, g, l1, l2, d1, d2, m1, m2, i1, i2, f1, f2):
         theta1a, theta1b, theta2a, theta2b = angle
 
-        i1m = i1 - m1*(d1**2) # moment of inertia around the center of mass
-        i2m = i2 - m2*(d2**2)
+        den = m2*(d2**2) + i2
+        inv = 1/(m1*(d1**2) + i1 + m2*(l1**2) - ((m2**2)*(l1**2)*(d2**2)*(math.cos(theta1a - theta2a)**2))/den)
 
-        num1 = -(2*g*m1*d1*(i2m + m2*(d2**2))*math.sin(theta1a) + l1*m2*(g*(2*i2m + m2*(d2**2))*math.sin(theta1a) + d2*(g*m2*d2*math.sin(theta1a - 2*theta2a) + 2*((theta2b**2)*(i2m + m2*(d2**2)) + (theta1b**2)*l1*m2*d2*math.cos(theta1a - theta2a))*math.sin(theta1a - theta2a))))
-        num2 = m2*d2*(-(g*(2*i1m + (l1**2)*m2 + 2*m1*(d1**2))*math.sin(theta2a)) + l1*(g*m1*d1*math.sin(theta2a) + 2*(theta1b**2)*(i1m + (l1**2)*m2 + m1*(d1**2))*math.sin(theta1a - theta2a) + (theta2b**2)*l1*m2*d2*math.sin(2*(theta1a - theta2a)) + g*m1*d1*math.sin(2*theta1a - theta2a) + g*l1*m2*math.sin(2*theta1a - theta2a)))
-        den = 2*i1m*(l1**2)*m2 + 2*i2m*m1*(d1**2) + (l1**2)*(m2**2)*(d2**2) + 2*m1*m2*(d1**2)*(d2**2) + 2*i1m*(i2m + m2*(d2**2)) - (l1**2)*(m2**2)*(d2**2)*math.cos(2*(theta1a - theta2a))
+        num1 = -(m2**2)*(l1**2)*(d2**2)*(theta1b**2)*math.cos(theta1a - theta2a)*math.sin(theta1a - theta2a)
+        num2 = (m2**2)*g*l1*(d2**2)*math.cos(theta1a - theta2a)*math.sin(theta2a)
+        num3 = m2*l1*d2*f2*theta2b*math.cos(theta1a - theta2a)
+        term1 = -m2*l1*d2*(theta2b**2)*math.sin(theta1a - theta2a)
+        term2 = -m1*g*d1*math.sin(theta1a)
+        term3 = -m2*g*l1*math.sin(theta1a)
+        term4 = -f1*theta1b
 
-        friction1 = friction_factor*theta1b
-        friction2 = friction_factor*theta2b
+        num4 = -m2*l1*d2*math.cos(theta1a - theta2a)
+        num5 = m2*l1*d2*(theta1b**2)*math.sin(theta1a - theta2a)
+        num6 = -m2*g*d2*math.sin(theta2a)
+        num7 = -f2*theta2b
 
         dtheta1adt = theta1b
-        dtheta1bdt = num1/den - friction1
+        dtheta1bdt = inv*((num1 + num2 + num3)/den + term1 + term2 + term3 + term4)
         dtheta2adt = theta2b
-        dtheta2bdt = num2/den - friction2
+        dtheta2bdt = (num4*dtheta1bdt + num5 + num6 + num7)/den
 
         return np.array([dtheta1adt,dtheta1bdt,dtheta2adt,dtheta2bdt])
