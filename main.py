@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import pygame
 import math
 from pendulum import Pendulum
@@ -45,7 +47,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 pendulums1, pendulums2 = restart()
-    
+
     screen.fill("black")
 
     for pendulum in pendulums2:
