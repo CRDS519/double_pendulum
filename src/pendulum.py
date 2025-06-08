@@ -1,8 +1,9 @@
 import math
 import pygame
 import numpy as np
-from physics.rungekutta import *
-from physics.pendulum_fct import *
+
+from src.physics.rungekutta import *
+from src.physics.pendulum_fct import *
 
 class Pendulum:
     def __init__(self, angle1, angle2, l1, l2, d1, d2, m1, m2, i1, i2, g, pendulum_type, model, scale, friction1, friction2, color):
@@ -35,11 +36,12 @@ class Pendulum:
 
         self.friction1 = friction1
         self.friction2 = friction2
-    
+
         self.color = color
+
     def update(self, dt):
         self.move_pendulum(dt)
-    
+
     def move_pendulum(self, dt):
         if self.pendulum_type == 'Simple':
             if self.model == 'Classic':
@@ -50,7 +52,7 @@ class Pendulum:
                 f = f_simple_physic_pendulum
                 rk4 = rk4_simple_physic_pendulum
                 args = (self.g, self.l1, self.d1, self.m1, self.i1, self.friction1)
-                
+
             state = (self.angle1, self.angularSpeed1)
             new_state = rk4(f, state, dt, *args)
             self.angle1, self.angularSpeed1 = new_state
@@ -73,6 +75,9 @@ class Pendulum:
         return int(self.origin_x + scale*x_m), int(self.origin_y + scale*y_m)
 
     def draw(self, screen):
+        self.origin_x = screen.get_width() /2
+        self.origin_y = screen.get_height() /2
+
         if self.pendulum_type == 'Simple':
             x1, y1 = self.to_screen(self.l1*math.sin(self.angle1), self.l1*math.cos(self.angle1))
 

@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator, FuncFormatter
 
-from utils import pi_formatter
+from src.utils import pi_formatter
 
 def read_double(file):
     time = []

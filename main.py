@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import pygame
 import math
-from pendulum import Pendulum
+import pygame
+
+from src.pendulum import Pendulum
 
 pygame.init()
 width = 1600
