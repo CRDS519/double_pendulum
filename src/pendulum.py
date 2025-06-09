@@ -14,7 +14,7 @@ class Pendulum:
     def __init__(
             self,
             pendulum_type = None,
-            model = None,
+            model = "classic",
             theta1 = None,
             theta2 = None,
             dtheta1 = 0,
